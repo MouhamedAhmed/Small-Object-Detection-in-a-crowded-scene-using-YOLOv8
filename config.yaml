@@ -1,0 +1,56 @@
+###################   General Configs   ###################
+# dataset folder path containing everything about data
+dataset_path: 'dataset'
+# labelmap required for training
+labelmap: 
+  'small nymph': 0
+  'large nymph': 1
+  'adult': 2
+# If added, only tiles of a const dimension (min_sample_dim) (const ratio of 1:1) will be generated then resized to a constant dimension (cell_dim). If not, tiles with random dimensions (with a random ratio from 3:4 to 4:3, where minimum width and height is min_sample_dim) will be generated then resized to a constant dimension (cell_dim).
+const_tiles: False
+# dimension of output image
+cell_dim: 640
+
+
+###################   Dataset Preparation Configs   ###################
+# images folder path containing annotated image
+img_path: 'img'
+# json file path containing groundtruth annotations
+json_path: 'whitefly.json'
+# visualize gt images
+gt_vis: True
+# gt visualization folder
+gt_vis_folder: 'gt_bbs'
+# min dimension of the generated tile in case of const_tiles being False, and actual dimension of the generated tile in case of const_tiles being True.
+min_sample_dim: 640
+# number of generated samples per image.
+num_samples: 200
+# If added, nymphs having (area/image_area) less than filter_small_threshold will be filtered out.
+filter_small: False
+# area threshold of filtering nymphs.
+filter_small_threshold: 0.000005
+# maximum ratio of empty files to non-empty ones
+max_empty_ratio: 0.2
+
+
+
+###################   Dataset Preparation Configs   ###################
+# model version to train from scratch 
+model_version: 'yolov8n'
+# model path to tune a checkpoint
+model_path: NULL
+# number of epochs
+epochs: 150
+# batch size
+batch_size: 8
+# maximum number of detections per tile
+max_det: 600
+
+
+
+
+
+
+
+
+
