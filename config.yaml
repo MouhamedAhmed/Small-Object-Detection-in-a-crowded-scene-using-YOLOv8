@@ -10,6 +10,10 @@ labelmap:
 const_tiles: False
 # dimension of output image
 cell_dim: 640
+# hyperparams 
+conf_threshold: 0.25
+iou_threshold: 0.3
+max_out_dets: 1000
 
 
 ###################   Dataset Preparation Configs   ###################
