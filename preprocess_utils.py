@@ -60,7 +60,7 @@ def plot_color_legend(img, color_code):
 
   for label, color in color_code.items():
     y2 = y1 + 50
-    draw.rectangle(((x1, y1), (x2, y2)), fill=color)
+    draw.rectangle(((x1, y1), (x2, y2)), fill=tuple(color))
     draw.text((x1, y1-40), label, font=font)
     y1 += 100
   return img
@@ -79,7 +79,15 @@ def draw_bbs(img, df, color_code):
             (int(row['x2']*w), 
               int(row['y2']*h))
             ]
-    draw.rectangle(shape, outline =color_code[row['label_name']], width=2)
+    color = tuple(color_code[row['label_name']])
+    draw.rectangle(shape, outline=color, width=2)
+    if 'score' in df.columns:
+      draw.text(
+        (shape[0][0], shape[0][1]-10), 
+        str(np.round(row['score'], 3)),
+        fill=color+(255,)  
+      )
+
   return img
 
 
@@ -121,11 +129,12 @@ def parse_json(json_path, image_folder, labelmap=None, visualize=False, vis_fold
   # create dataframe per image
   dfs = dict()
 
-  if os.path.exists(vis_folder):
-    shutil.rmtree(vis_folder)
-  os.mkdir(vis_folder)
+  if visualize == True and vis_folder is not None:
+    if os.path.exists(vis_folder):
+      shutil.rmtree(vis_folder)
+    os.mkdir(vis_folder)
 
-  for img_name in tqdm(bboxes.keys()):
+  for img_name in tqdm(list(bboxes.keys())):
     # get width and height
     cv2_img = cv2.imread(os.path.join(image_folder, img_name))
     h, w = cv2_img.shape[:2]
@@ -254,7 +263,6 @@ def generate_samples(image, labels, num_samples=100, min_sample_dim=640, min_asp
       dim_h = min_sample_dim
 
     cell = image[top:top+dim_h, left:left+dim_w]
-    # cell_dim = min(dim_h, dim_w)
     cell = cv2.resize(cell, (cell_dim, cell_dim), interpolation = cv2.INTER_AREA)
     # augment
     # cell = augment(cell)
@@ -272,12 +280,6 @@ def generate_samples(image, labels, num_samples=100, min_sample_dim=640, min_asp
 
         x1, y1, x2, y2 = int(row['x1']*width), int(row['y1']*height), int(row['x2']*width), int(row['y2']*height)
         
-        # two classes only 0->aphid, 1->other(excluded,winged)
-        if row['label'] == 1:
-          cls = 0
-        else:
-          cls = 1
-
         # make a list of tuples
         polygon = list(zip([x1,x2,x2,x1], [y1,y1,y2,y2]))
 
@@ -300,7 +302,7 @@ def generate_samples(image, labels, num_samples=100, min_sample_dim=640, min_asp
               ]
           
           bbs.append(bb)
-          classes.append(cls)
+          classes.append(row['label'])
 
     if len(bbs)>0 or bg_sample_count<max_bg_samples or skipped>max_skipped:
       samples_bbs.append(bbs)

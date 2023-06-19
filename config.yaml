@@ -7,7 +7,7 @@ labelmap:
   'large nymph': 1
   'adult': 2
 # If added, only tiles of a const dimension (min_sample_dim) (const ratio of 1:1) will be generated then resized to a constant dimension (cell_dim). If not, tiles with random dimensions (with a random ratio from 3:4 to 4:3, where minimum width and height is min_sample_dim) will be generated then resized to a constant dimension (cell_dim).
-const_tiles: False
+const_tiles: True
 # dimension of output image
 cell_dim: 640
 # hyperparams 
@@ -38,7 +38,7 @@ max_empty_ratio: 0.2
 
 
 
-###################   Dataset Preparation Configs   ###################
+###################   Train Configs   ###################
 # model version to train from scratch 
 model_version: 'yolov8n'
 # model path to tune a checkpoint
@@ -49,6 +49,12 @@ epochs: 150
 batch_size: 8
 # maximum number of detections per tile
 max_det: 600
+
+
+###################   Predict Configs   ###################
+# stride of tiling
+stride: 500
+internal_boundary_filteration_thresh: 20
 
 
 

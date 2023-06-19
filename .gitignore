@@ -1,2 +1,7 @@
 dataset/
+testset/
 runs/
+ckpts/
+
+
+__pycache__/
