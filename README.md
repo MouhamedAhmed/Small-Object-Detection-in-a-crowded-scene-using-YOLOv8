@@ -4,7 +4,7 @@
 ```bash
 python3.10 preprocess.py --config_path <CONFIG_YAML_PATH>
 ```
-where `CONFIG_YAML_PATH` is the config file path containing all configurations for the preprocessing process, default is "config.yaml"
+where `CONFIG_YAML_PATH` is the config file path containing all configurations for the preprocessing process, default is "config.yaml".
 
 ## Train YOLOv8n Model
 
