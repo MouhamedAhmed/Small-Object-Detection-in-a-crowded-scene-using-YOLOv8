@@ -21,7 +21,7 @@ where
 - `PYTORCH_MODEL_PATH` is the trained pytorch model path, typically in `runs/detect/yolov8n/weights/best.pt`, default is `model.pt`.
 - `MODEL_TYPE` is the model types to be exported, one of (--keras, --tflite) or both.
 
-  
+## Predict on Image or Folder of Images  
 
 
 
