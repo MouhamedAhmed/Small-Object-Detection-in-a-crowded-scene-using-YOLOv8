@@ -135,6 +135,9 @@ def parse_json(json_path, image_folder, labelmap=None, visualize=False, vis_fold
     os.mkdir(vis_folder)
 
   for img_name in tqdm(list(bboxes.keys())):
+    if not img_name.endswith(('.jpg', '.png', 'jpeg')):
+      continue
+
     # get width and height
     cv2_img = cv2.imread(os.path.join(image_folder, img_name))
     h, w = cv2_img.shape[:2]
@@ -340,6 +343,8 @@ def remove_extra_empty_files(image_folder, label_folder, max_empty_ratio=0.2):
 def generate_data(anns, source_image_names, image_source_dir, image_destination_dir, label_destination_dir, num_samples=100, min_sample_dim=640, min_aspect_ratio=0.5, cell_dim=640, min_dim_only=False, filter_small=False, filter_small_threshold=0.0, max_empty_ratio=0.2):
   for image_name in tqdm(source_image_names):
     source_image_path = os.path.join(image_source_dir, image_name)
+    if not source_image_path.endswith(('.jpg', '.png', 'jpeg')):
+      continue
     image = cv2.imread(source_image_path, cv2.IMREAD_COLOR)
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 

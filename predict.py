@@ -171,8 +171,8 @@ class Predictor:
             out = [self.model.get_tensor(od['index']) for od in output_details]
             _, bboxes, classes, scores = out
         else:
-            bboxes, scores, classes = None, None, None
-        
+            bboxes, scores, classes = None, None, 
+                
         return {
             'boxes':bboxes,
             'scores':scores,
@@ -187,24 +187,24 @@ class Predictor:
         max_object_size = (self.cell_dim - self.stride - 2*self.internal_boundary_filteration_thresh)/self.cell_dim
 
         for i in range(len(results)):
+            
             tile_x1, tile_y1, tile_x2, tile_y2 = start_coords[i][0], start_coords[i][1], start_coords[i][0]+self.cell_dim, start_coords[i][1]+self.cell_dim
             left_internal, top_internal, right_internal, bottom_internal = (tile_x1 != 0), (tile_y1 != 0), (tile_x2 != w), (tile_y2 != h)
             
             to_be_removed_idx = []
             for box_idx, box in enumerate(results[i]['boxes']):
                 x1, y1, x2, y2 = box
-                # filter if internal boundary and obejct id so close to boundary (Note: Do NOT filter if close to left or top and object is relatively big)
+                # filter if internal boundary and obejct is so close to boundary (Note: Do NOT filter if close to left or top and object is relatively big) OR score is low
                 if (left_internal and (x1 < internal_boundary_filteration_ratio) and (x2-x1 < max_object_size)) or \
                    (right_internal and (x2 > 1-internal_boundary_filteration_ratio)) or \
                    (top_internal and (y1 < internal_boundary_filteration_ratio) and (y2-y1 < max_object_size)) or \
-                   (bottom_internal and (y2 > 1-internal_boundary_filteration_ratio)):
+                   (bottom_internal and (y2 > 1-internal_boundary_filteration_ratio)) or \
+                   results[i]['scores'][box_idx] < self.conf_threshold:
                     to_be_removed_idx.append(box_idx)
-            
             for removed_idx in sorted(np.unique(to_be_removed_idx), reverse=True):
                 results[i]['boxes'] = np.delete(results[i]['boxes'], removed_idx, axis=0)
                 results[i]['scores'] = np.delete(results[i]['scores'], removed_idx, axis=0)
                 results[i]['classes'] = np.delete(results[i]['classes'], removed_idx, axis=0)
-
         # revert back from tile coords to image coords 
         for i in range(len(results)):
             start = start_coords[i] + start_coords[i]
@@ -212,6 +212,7 @@ class Predictor:
                         ((box*self.cell_dim)+start)/np.array([w,h,w,h])
                         for box in results[i]['boxes']
                     ])
+            
         # NMS
         for i in range(10,len(results)-1):
             for j in range(i+1, len(results)):
@@ -314,9 +315,11 @@ def main():
         if not os.path.exists(vis_folder):
             os.mkdir(vis_folder)
         total_results = []
-        for image_file in tqdm(os.listdir(args.image_path)):
+        for image_file in tqdm(os.listdir(args.image_path)[:5]):
             dst_path = os.path.join(vis_folder, image_file)
             image_path = os.path.join(args.image_path, image_file)
+            if not image_path.endswith(('.jpg', '.png', '.jpeg')):
+                continue
             # read image
             image = cv2.imread(image_path, cv2.IMREAD_COLOR)
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -337,6 +340,8 @@ def main():
 
     # predict on single image
     else:
+        if not args.image_path.endswith(('.jpg', '.png', '.jpeg')):
+            print('ERROR: image_path is not an image')
         vis_folder = os.path.dirname(args.image_path) + '_model_predictions'
         if not os.path.exists(vis_folder):
             os.mkdir(vis_folder)

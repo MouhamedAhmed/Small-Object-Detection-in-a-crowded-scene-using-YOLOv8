@@ -128,6 +128,8 @@ class Tester:
             vis = dict()
             images = dict()
             for image_file in tqdm(os.listdir(images_folder)):
+                if not image_file.endswith(('.jpg', '.png', '.jpeg')):
+                    continue
                 if image_file in gt_images:
                     image_path = os.path.join(images_folder, image_file)
                     # read image
