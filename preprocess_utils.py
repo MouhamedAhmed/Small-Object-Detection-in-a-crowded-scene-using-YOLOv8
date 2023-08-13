@@ -105,9 +105,6 @@ def parse_json(json_path, image_folder, labelmap=None, visualize=False, vis_fold
   cat_to_id = {i['name']:i['id'] for i in data['categories']}
   # get image names and ids
   img_ids = {p['id']:p['file_name'] for p in data['images']}
-  # get image widths and heights
-  img_h = {p['file_name']:p['height'] for p in data['images']}
-  img_w = {p['file_name']:p['width'] for p in data['images']}
 
   # initialize empty lists for each image
   bboxes = {img_ids[p['image_id']]:[] for p in data['annotations']}
