@@ -12,6 +12,8 @@ import albumentations as A
 import json
 from PIL import Image, ImageDraw, ImageFont
 import random
+from shapely.geometry import Polygon
+
 
 
 def HSVToRGB(h, s, v): 
@@ -105,9 +107,6 @@ def parse_json(json_path, image_folder, labelmap=None, visualize=False, vis_fold
   cat_to_id = {i['name']:i['id'] for i in data['categories']}
   # get image names and ids
   img_ids = {p['id']:p['file_name'] for p in data['images']}
-  # get image widths and heights
-  img_h = {p['file_name']:p['height'] for p in data['images']}
-  img_w = {p['file_name']:p['width'] for p in data['images']}
 
   # initialize empty lists for each image
   bboxes = {img_ids[p['image_id']]:[] for p in data['annotations']}
@@ -186,7 +185,7 @@ def augment(img):
     ###############################################
     # define an augmentation pipeline
     aug_pipeline = iaa.Sequential([
-        iaa.Sometimes(0.5, iaa.GaussianBlur((0, 0.5))), # apply Gaussian blur with a sigma between 0 and 1 to 50% of the images
+        iaa.Sometimes(1.0, iaa.GaussianBlur((0.5, 0.8))), # apply Gaussian blur with a sigma between 0 and 1 to 50% of the images
         iaa.Sometimes(0.5, iaa.AdditiveGaussianNoise(scale=(2, 5))),
         iaa.Sometimes(0.7, iaa.AddToHueAndSaturation((-5, 5))),
         iaa.Sometimes(0.5, iaa.Sharpen(alpha=(0, 0.5), lightness=(0.25, 1.0))), # sharpen images
@@ -195,10 +194,10 @@ def augment(img):
     )
 
     # extra augs
-    bright_contrast = A.RandomBrightnessContrast(p = 0.3, brightness_limit = 0.1, contrast_limit = 0.3) # random brightness and contrast
+    bright_contrast = A.RandomBrightnessContrast(p = 0.3, brightness_limit = 0.08, contrast_limit = 0.2) # random brightness and contrast
     gamma = A.RandomGamma(p = 0.3, gamma_limit = [30, 150]) # random gamma
     clahe = A.CLAHE(p = 0.2, clip_limit=6) # CLAHE (see https://en.wikipedia.org/wiki/Adaptive_histogram_equalization#Contrast_Limited_AHE)
-    blur = A.Blur(p = 0.2)
+    # blur = A.Blur(p = 0.2)
 
     # apply augmentation pipeline to sample image
     img_aug = aug_pipeline.augment_image(img)
@@ -207,7 +206,7 @@ def augment(img):
     img_aug = bright_contrast(image = img_aug)['image']
     img_aug = gamma(image = img_aug)['image']
     img_aug = clahe(image = img_aug)['image']
-    img_aug = blur(image = img_aug)['image']
+    # img_aug = blur(image = img_aug)['image']
 
     return img_aug
 
@@ -229,10 +228,32 @@ def is_point_in_rect(polygon, p) :
    else :
       return False
 
+def get_rects_intersection(rect1, rect2):
+    rect1, rect2 = Polygon(rect1), Polygon(rect2)
+    intersection = rect1.intersection(rect2)
+    if intersection.area <= 0:
+      return False
+    xx, yy = intersection.exterior.coords.xy
+    x1 = np.min(xx)
+    x2 = np.max(xx)
+    y1 = np.min(yy)
+    y2 = np.max(yy)
+    return [x1, y1, x2, y2]
+    
 
 
 
-def generate_samples(image, labels, num_samples=100, min_sample_dim=640, min_aspect_ratio=0.5, cell_dim=640, min_dim_only=False, filter_small=False, filter_small_threshold=0.0):
+
+def generate_random_linear(low, high, prefer_high=False):
+  weights = [1/(idx+1) for idx in range(high-low)]
+  sw = sum(weights)
+  weights = [w/sw for w in weights] # weights need to sum to 1
+  if prefer_high:
+    weights.reverse()
+  return np.random.choice(range(low, high), 1, p=weights)[0]
+
+
+def generate_samples(image, labels, num_samples=100, min_sample_dim=640, min_aspect_ratio=0.5, cell_dim=640, min_dim_only=False, prefer_big_samples=False, filter_small=False, filter_small_threshold=0.0, augment_img=False, augment_img_percentage=0.8):
   samples_bbs = []
   samples_classes = []
   samples = []
@@ -250,17 +271,41 @@ def generate_samples(image, labels, num_samples=100, min_sample_dim=640, min_asp
     if image.shape[0] < min_sample_dim:
       top = 0
     else:
-      top = np.random.randint(low=0, high=image.shape[0]-min_sample_dim)
+      top_low = 0
+      top_high = image.shape[0]-min_sample_dim
+      if not prefer_big_samples:
+        top = np.random.randint(low=top_low, high=top_high)
+      else:
+        top = generate_random_linear(low=top_low, high=top_high)
+
     # generate left from 0 ~ image_width-min_sample_dim
     if image.shape[1] < min_sample_dim:
       left = 0
     else:
-      left = np.random.randint(low=0, high=image.shape[1]-min_sample_dim)
+      left_low = 0
+      left_high = image.shape[1]-min_sample_dim
+      if not prefer_big_samples:
+        left = np.random.randint(low=left_low, high=left_high)
+      else:
+        left = generate_random_linear(low=left_low, high=left_high)
+
 
     # generate sample dimensions (width and height) & preserve aspect ratio
     if not min_dim_only:
-      dim_w = np.random.randint(low=min_sample_dim, high=min(image.shape[1]-left, (image.shape[0]-top)//min_aspect_ratio))
-      dim_h = np.random.randint(low=max(min_sample_dim, int(dim_w*min_aspect_ratio)), high=min(image.shape[0]-top, int(dim_w/min_aspect_ratio)))
+      w_low = min_sample_dim
+      w_high = min(image.shape[1]-left, int((image.shape[0]-top)/min_aspect_ratio))
+      if not prefer_big_samples:
+        dim_w = np.random.randint(low=w_low, high=w_high)
+      else:
+        dim_w = generate_random_linear(low=w_low, high=w_high, prefer_high=True)
+
+      h_low =max(min_sample_dim, int(dim_w*min_aspect_ratio))
+      h_high = min(image.shape[0]-top, int(dim_w/min_aspect_ratio))
+      if not prefer_big_samples:
+        dim_h = np.random.randint(low=h_low, high=h_high)
+      else:
+        dim_h = generate_random_linear(low=h_low, high=h_high, prefer_high=True)  
+        
     else:
       dim_w = min_sample_dim
       dim_h = min_sample_dim
@@ -268,7 +313,8 @@ def generate_samples(image, labels, num_samples=100, min_sample_dim=640, min_asp
     cell = image[top:top+dim_h, left:left+dim_w]
     cell = cv2.resize(cell, (cell_dim, cell_dim), interpolation = cv2.INTER_AREA)
     # augment
-    # cell = augment(cell)
+    if augment_img and random.random()<augment_img_percentage:
+      cell = augment(cell)
 
     samples.append(cell)
 
@@ -277,35 +323,36 @@ def generate_samples(image, labels, num_samples=100, min_sample_dim=640, min_asp
 
     sample_coords = [left, top, left+dim_w, top+dim_h]
 
+    x1, y1, x2, y2 = sample_coords
+    sample_polygon = list(zip([x1,x2,x2,x1], [y1,y1,y2,y2]))
+
+
     bbs = []
     classes = []
     for i, row in labels.iterrows():
 
         x1, y1, x2, y2 = int(row['x1']*width), int(row['y1']*height), int(row['x2']*width), int(row['y2']*height)
-        
         # make a list of tuples
         polygon = list(zip([x1,x2,x2,x1], [y1,y1,y2,y2]))
 
-        # rescale to image size
-        polygon = [[int(point[0]), int(point[1])] for point in polygon]
 
         # get part of polygon intersecting with the sample
-        polygon = [point for point in polygon if is_point_in_rect(sample_coords, point)]
+        polygon = get_rects_intersection(polygon, sample_polygon)
+        if not polygon:
+          continue
 
+        # get the coords of the intersection
+        x1, y1, x2, y2 = polygon
+        # rescale as ratios to sample size (xc, yc, w, h)
+        bb = [
+                (((x1+x2)/2) - left) / dim_w, 
+                (((y1+y2)/2) - top) / dim_h, 
+                (x2 - x1) / dim_w, 
+                (y2 - y1) / dim_h
+            ]
+        bbs.append(bb)
+        classes.append(row['label'])
 
-        # check if polygon intersects or inside the sample
-        if len(polygon)==4:
-          polygon = np.array(polygon)
-          # rescale as ratios to sample size
-          bb = [
-                  (((x1+x2)/2) - left) / dim_w, 
-                  (((y1+y2)/2) - top) / dim_h, 
-                  (x2 - x1) / dim_w, 
-                  (y2 - y1) / dim_h
-              ]
-          
-          bbs.append(bb)
-          classes.append(row['label'])
 
     if len(bbs)>0 or bg_sample_count<max_bg_samples or skipped>max_skipped:
       samples_bbs.append(bbs)
@@ -340,7 +387,7 @@ def remove_extra_empty_files(image_folder, label_folder, max_empty_ratio=0.2):
 
 
 
-def generate_data(anns, source_image_names, image_source_dir, image_destination_dir, label_destination_dir, num_samples=100, min_sample_dim=640, min_aspect_ratio=0.5, cell_dim=640, min_dim_only=False, filter_small=False, filter_small_threshold=0.0, max_empty_ratio=0.2):
+def generate_data(anns, source_image_names, image_source_dir, image_destination_dir, label_destination_dir, num_samples=100, min_sample_dim=640, min_aspect_ratio=0.5, cell_dim=640, min_dim_only=False, prefer_big_samples=False, filter_small=False, filter_small_threshold=0.0, max_empty_ratio=0.2, augment_img=False, augment_img_percentage=0.8):
   for image_name in tqdm(source_image_names):
     source_image_path = os.path.join(image_source_dir, image_name)
     if not source_image_path.endswith(('.jpg', '.png', 'jpeg')):
@@ -349,7 +396,7 @@ def generate_data(anns, source_image_names, image_source_dir, image_destination_
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
     labels = anns[image_name]
-    samples, samples_bbs, samples_classes = generate_samples(image, labels, num_samples=num_samples, min_sample_dim=min_sample_dim, min_aspect_ratio=min_aspect_ratio, cell_dim=cell_dim, min_dim_only=min_dim_only, filter_small=filter_small, filter_small_threshold=filter_small_threshold)
+    samples, samples_bbs, samples_classes = generate_samples(image, labels, num_samples=num_samples, min_sample_dim=min_sample_dim, min_aspect_ratio=min_aspect_ratio, cell_dim=cell_dim, min_dim_only=min_dim_only, prefer_big_samples=prefer_big_samples, filter_small=filter_small, filter_small_threshold=filter_small_threshold, augment_img=augment_img, augment_img_percentage=augment_img_percentage)
 
     for i in range(len(samples)): 
       # save the sample

@@ -8,6 +8,7 @@ def main():
     # arguments parsing
     argparser = argparse.ArgumentParser(description=__doc__)
     argparser.add_argument('-config_path', '--config_path', type=str, help='yaml config path', default = 'config.yaml')
+    argparser.add_argument("--resume", action='store_true', help='If added, resume training.')   
     args = argparser.parse_args()
 
     # read configs
@@ -49,7 +50,8 @@ def main():
         epochs=configs['epochs'],
         batch=configs['batch_size'],
         max_det=configs['max_det'],
-        name=configs['model_version']
+        name=configs['model_version'],
+        resume=args.resume
     )
 
 if __name__ == '__main__':

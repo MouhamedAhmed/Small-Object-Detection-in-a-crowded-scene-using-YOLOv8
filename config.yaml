@@ -8,6 +8,8 @@ labelmap:
   'adult': 2
 # If added, only tiles of a const dimension (min_sample_dim) (const ratio of 1:1) will be generated then resized to a constant dimension (cell_dim). If not, tiles with random dimensions (with a random ratio from 3:4 to 4:3, where minimum width and height is min_sample_dim) will be generated then resized to a constant dimension (cell_dim).
 const_tiles: True
+# generates bigger-in-size samples in random_tiles mode
+prefer_big_samples: true
 # dimension of output image
 cell_dim: 640
 # hyperparams 
@@ -35,6 +37,11 @@ filter_small: False
 filter_small_threshold: 0.000005
 # maximum ratio of empty files to non-empty ones
 max_empty_ratio: 0.2
+# image augmentation option 
+augment_img: False
+# what percentage of images should we augment 
+augment_img_percentage: 0.8
+
 
 
 
@@ -55,6 +62,7 @@ max_det: 600
 # stride of tiling
 stride: 500
 internal_boundary_filteration_thresh: 20
+
 
 
 

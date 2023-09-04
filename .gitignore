@@ -1,7 +1,14 @@
 dataset/
+cereal_dataset/
 testset/
 runs/
 ckpts/
+
+a.py
+aug.py
+plot_tile.py
+yolov8*.pt
+
 
 
 __pycache__/

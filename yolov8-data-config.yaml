@@ -1,9 +1,7 @@
 names:
-- small nymph
-- large nymph
-- adult
-nc: 3
+- cereal
+nc: 1
 path: /home/mohamed/train/Small-Object-Detection-in-a-crowded-scene-using-YOLOv8/
-test: dataset/yolo_dataset_const_tiles/test
-train: dataset/yolo_dataset_const_tiles/train
-val: dataset/yolo_dataset_const_tiles/valid
+test: cereal_dataset/yolo_dataset_random_tiles/test
+train: cereal_dataset/yolo_dataset_random_tiles/train
+val: cereal_dataset/yolo_dataset_random_tiles/valid

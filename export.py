@@ -8,12 +8,12 @@ import torchvision
 from PIL import Image
 import cv2
 import numpy as np
-from pydantic import BaseModel
+# from pydantic import BaseModel
 from typing import Dict, List, Optional, Tuple, Union
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 from collections import defaultdict
-from pydantic import parse_obj_as
+# from pydantic import parse_obj_as
 
 from ultralytics import YOLO
 import tensorflow as tf

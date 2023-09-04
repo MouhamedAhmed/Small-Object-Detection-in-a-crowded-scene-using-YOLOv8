@@ -86,7 +86,8 @@ class Predictor:
                     stride, 
                     cell_dim, 
                     max_out_dets, 
-                    internal_boundary_filteration_thresh
+                    internal_boundary_filteration_thresh,
+                    is_tile
                 ):
         self.model_path = model_path
         self.model_type = model_type
@@ -98,6 +99,7 @@ class Predictor:
         self.cell_dim = cell_dim
         self.max_out_dets = max_out_dets
         self.internal_boundary_filteration_thresh = internal_boundary_filteration_thresh
+        self.is_tile = is_tile
 
         # load model 
         self._read_model()
@@ -153,6 +155,8 @@ class Predictor:
         if self.model_type == 'pytorch':
             device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
             tile = torch.Tensor((np.expand_dims(tile, 0) / 255.0).transpose((0,3,1,2))).half().to(device)
+            print(tile.shape)
+            print(self.model(tile))
             bboxes, scores, classes, _ = self.model(tile)
             bboxes = bboxes.cpu().detach().numpy()
             scores = scores.cpu().detach().numpy()
@@ -246,16 +250,24 @@ class Predictor:
 
 
     def predict(self, image):
-        # tile the image
-        tiles, start_coords = self._tile(image)
+        if self.is_tile:
+            # tile the image
+            tiles, start_coords = self._tile(image)
 
-        # run model
-        results = []
-        for i, tile in enumerate(tiles):
-            results.append(self._predict_tile(tile))
+            # run model
+            results = []
+            for i, tile in enumerate(tiles):
+                results.append(self._predict_tile(tile))
 
-        # NMS and stitch
-        results = self._stitch(image, results, start_coords)
+            # NMS and stitch
+            results = self._stitch(image, results, start_coords)
+        else:
+            size = (self.cell_dim, self.cell_dim)
+            image = cv2.resize(image, size, interpolation = cv2.INTER_AREA)
+            results = self._predict_tile(image)
+
+
+            
 
         # convert to dataframe
         label_names = [self.label_map[i] for i in results['classes']]
@@ -306,7 +318,8 @@ def main():
                             configs['stride'], 
                             configs['cell_dim'], 
                             configs['max_out_dets'], 
-                            configs['internal_boundary_filteration_thresh']
+                            configs['internal_boundary_filteration_thresh'],
+                            configs['const_tiles']
                         )
     
     # predict on a folder
@@ -315,7 +328,7 @@ def main():
         if not os.path.exists(vis_folder):
             os.mkdir(vis_folder)
         total_results = []
-        for image_file in tqdm(os.listdir(args.image_path)[:5]):
+        for image_file in tqdm(os.listdir(args.image_path)):
             dst_path = os.path.join(vis_folder, image_file)
             image_path = os.path.join(args.image_path, image_file)
             if not image_path.endswith(('.jpg', '.png', '.jpeg')):
@@ -357,7 +370,8 @@ def main():
         vis_image.save(dst_path)
         # print result
         labels, counts = np.unique(results['label_name'].to_numpy(), return_counts=True)
-        print({label_map[labels[i]]:counts[i] for i in range(len(labels))})
+        print(label_map)
+        print({labels[i]:counts[i] for i in range(len(labels))})
 
 
 

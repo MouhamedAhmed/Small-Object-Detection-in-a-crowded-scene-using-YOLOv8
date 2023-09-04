@@ -34,6 +34,19 @@ def main():
     images_train, images_valtest = train_test_split(images_names, test_size=0.1, random_state=42)
     images_val, images_test = train_test_split(images_valtest, test_size=0.5, random_state=42)
 
+    # split to folders
+    split_folders = ['train', 'val', 'test']
+    for folder in split_folders:
+        if os.path.exists(os.path.join(dataset_path, folder)):
+            shutil.rmtree(os.path.join(dataset_path, folder))
+        os.mkdir(os.path.join(dataset_path, folder))
+    for f in images_train:
+        shutil.copy(os.path.join(img_path, f), os.path.join(dataset_path, 'train', f))
+    for f in images_val:
+        shutil.copy(os.path.join(img_path, f), os.path.join(dataset_path, 'val', f))
+    for f in images_test:
+        shutil.copy(os.path.join(img_path, f), os.path.join(dataset_path, 'test', f))
+
     # create folders for the new dataset
     if configs['const_tiles']:
         folder = 'yolo_dataset_const_tiles'
@@ -77,9 +90,12 @@ def main():
                     min_sample_dim=configs['min_sample_dim'], 
                     cell_dim=configs['cell_dim'], 
                     min_dim_only=configs['const_tiles'], 
+                    prefer_big_samples=configs['prefer_big_samples'],
                     filter_small=configs['filter_small'], 
                     filter_small_threshold=configs['filter_small_threshold'], 
-                    max_empty_ratio=configs['max_empty_ratio']
+                    max_empty_ratio=configs['max_empty_ratio'], 
+                    augment_img=configs['augment_img'], 
+                    augment_img_percentage=configs['augment_img_percentage']
                 )
 
     print('Validation Dataset Generation')
@@ -93,9 +109,12 @@ def main():
                     min_sample_dim=configs['min_sample_dim'], 
                     cell_dim=configs['cell_dim'], 
                     min_dim_only=configs['const_tiles'], 
+                    prefer_big_samples=configs['prefer_big_samples'],
                     filter_small=configs['filter_small'], 
                     filter_small_threshold=configs['filter_small_threshold'], 
-                    max_empty_ratio=configs['max_empty_ratio']
+                    max_empty_ratio=configs['max_empty_ratio'],
+                    augment_img=configs['augment_img'], 
+                    augment_img_percentage=configs['augment_img_percentage']
                 )
 
     print('Testing Dataset Generation')
@@ -109,9 +128,12 @@ def main():
                     min_sample_dim=configs['min_sample_dim'], 
                     cell_dim=configs['cell_dim'], 
                     min_dim_only=configs['const_tiles'], 
+                    prefer_big_samples=configs['prefer_big_samples'],
                     filter_small=configs['filter_small'], 
                     filter_small_threshold=configs['filter_small_threshold'], 
-                    max_empty_ratio=configs['max_empty_ratio']
+                    max_empty_ratio=configs['max_empty_ratio'],
+                    augment_img=configs['augment_img'], 
+                    augment_img_percentage=configs['augment_img_percentage']
                 )
 
 

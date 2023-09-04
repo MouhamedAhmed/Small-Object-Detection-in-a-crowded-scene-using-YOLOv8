@@ -142,9 +142,9 @@ class Tester:
 
             return total_results, images
 
-    def __call__(self, images_folder, annotations_json_path):
+    def __call__(self, images_folder, source_image_folder, annotations_json_path):
         # read gt
-        anns = parse_json(annotations_json_path, images_folder, labelmap={v:k for k,v in self.label_map.items()})
+        anns = parse_json(annotations_json_path, source_image_folder, labelmap={v:k for k,v in self.label_map.items()})
 
         # predict 
         predictions, images = self._predict_folder(images_folder, anns.keys())
@@ -290,8 +290,8 @@ def main():
                         configs['max_out_dets'], 
                         configs['internal_boundary_filteration_thresh']
                     )
-    
-    tester(args.image_folder, args.annotations_path)
+    source_image_folder = os.path.join(configs['dataset_path'], configs['img_path'])
+    tester(args.image_folder, source_image_folder, args.annotations_path)
     
 
 

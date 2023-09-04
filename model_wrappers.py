@@ -25,6 +25,7 @@ class Yolov8FullModel(nn.Module):
     def forward(self, image: torch.Tensor) -> torch.Tensor:
         # prediction
         yolo_preds = self.model(image)[0]
+        # yolo_preds = yolo_preds.view(yolo_preds.size(0), yolo_preds.size(1), -1)
 
         # get number of classes
         n_classes = yolo_preds.shape[1] - 4
@@ -90,7 +91,7 @@ class Yolov8Keras(tf.keras.models.Model):
         # load ultralytics pt model
         model = YOLO(model_path)
         model.fuse()  
-        model.info(verbose=True)  
+        model.info(verbose=False)  
 
         # export saved_model
         model.export(format='saved_model', nms=True) 
@@ -130,11 +131,6 @@ class Yolov8Keras(tf.keras.models.Model):
         y2 = yc + h//2
         boxes = tf.stack([x1, y1, x2, y2], axis=1)
 
-        # # filter on confidence
-        # selected_indices = scores >= self.conf_threshold
-        # boxes = tf.gather(boxes, selected_indices)
-        # scores = tf.gather(scores, selected_indices)
-        # classes = tf.gather(classes, selected_indices)        
 
         # NMS
         selected_indices = tf.image.non_max_suppression(boxes, scores, max_output_size=self.max_out_dets, iou_threshold=self.iou_threshold, score_threshold=self.conf_threshold)

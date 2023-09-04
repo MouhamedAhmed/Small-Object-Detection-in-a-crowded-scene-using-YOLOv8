@@ -1,2 +1,10 @@
-pydantic
+scikit-learn  
+opencv-python 
+pandas 
+matplotlib
+tqdm
+imgaug
+albumentations
 ultralytics
+
+

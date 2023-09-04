@@ -1,0 +1,28 @@
+batch_size: 8
+cell_dim: 640
+conf_threshold: 0.1
+const_tiles: false
+prefer_big_samples: true
+dataset_path: cereal_dataset
+epochs: 150
+filter_small: false
+filter_small_threshold: 5.0e-06
+gt_vis: true
+gt_vis_folder: gt_bbs
+img_path: img
+internal_boundary_filteration_thresh: 20
+iou_threshold: 0.5
+json_path: cereal.json
+labelmap:
+  cereal: 0
+max_det: 1000
+max_empty_ratio: 0.2
+max_out_dets: 1000
+min_sample_dim: 640
+# model_path: null
+model_path: runs/detect/yolov8m4/weights/last.pt
+model_version: yolov8m
+num_samples: 500
+stride: 500
+augment_img: True
+augment_img_percentage: 0.5
