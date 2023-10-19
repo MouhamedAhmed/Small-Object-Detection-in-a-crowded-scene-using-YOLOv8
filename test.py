@@ -92,7 +92,8 @@ class Tester:
                     stride, 
                     cell_dim, 
                     max_out_dets, 
-                    internal_boundary_filteration_thresh
+                    internal_boundary_filteration_thresh,
+                    is_tile
     ):
         self.model_path = model_path
         self.model_type = model_type
@@ -116,7 +117,8 @@ class Tester:
                             self.stride, 
                             self.cell_dim, 
                             self.max_out_dets, 
-                            self.internal_boundary_filteration_thresh
+                            self.internal_boundary_filteration_thresh,
+                            is_tile
                         )
 
         # initialize NMS object to make NMS between prediction and groundtruth
@@ -288,7 +290,8 @@ def main():
                         configs['stride'], 
                         configs['cell_dim'], 
                         configs['max_out_dets'], 
-                        configs['internal_boundary_filteration_thresh']
+                        configs['internal_boundary_filteration_thresh'], 
+                        configs['const_tiles']
                     )
     source_image_folder = os.path.join(configs['dataset_path'], configs['img_path'])
     tester(args.image_folder, source_image_folder, args.annotations_path)

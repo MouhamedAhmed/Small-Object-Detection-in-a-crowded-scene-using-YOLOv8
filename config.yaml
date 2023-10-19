@@ -10,7 +10,7 @@ labelmap:
 const_tiles: True
 # generates bigger-in-size samples in random_tiles mode
 prefer_big_samples: true
-# dimension of output image
+# dimension of output sample
 cell_dim: 640
 # hyperparams 
 conf_threshold: 0.25
@@ -35,8 +35,8 @@ num_samples: 200
 filter_small: False
 # area threshold of filtering nymphs.
 filter_small_threshold: 0.000005
-# maximum ratio of empty files to non-empty ones
-max_empty_ratio: 0.2
+# maximum ratio of empty tiles to non-empty ones
+max_empty_ratio: 0.15
 # image augmentation option 
 augment_img: False
 # what percentage of images should we augment 
