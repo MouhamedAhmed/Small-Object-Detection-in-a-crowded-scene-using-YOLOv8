@@ -211,7 +211,12 @@ class Predictor:
                 results[i]['classes'] = np.delete(results[i]['classes'], removed_idx, axis=0)
         # revert back from tile coords to image coords 
         for i in range(len(results)):
-            start = start_coords[i] + start_coords[i]
+            start = [
+                    start_coords[i][1],
+                    start_coords[i][0],
+                    start_coords[i][1],
+                    start_coords[i][0]
+                     ]
             results[i]['boxes'] = np.array([
                         ((box*self.cell_dim)+start)/np.array([w,h,w,h])
                         for box in results[i]['boxes']
