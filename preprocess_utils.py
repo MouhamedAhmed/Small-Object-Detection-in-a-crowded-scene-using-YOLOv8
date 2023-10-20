@@ -118,12 +118,15 @@ def parse_json(json_path, image_folder, labelmap=None, visualize=False, vis_fold
     classes[img_ids[p['image_id']]].append(p['category_id'])
   
   # if visualization will be done, create random but visually-separable color code and save it
-  if visualize:
+  if not os.path.exists("color_code.json"):
     print('Create New Color Code for Labels')
     color_code = getDistinctColors(list(cat_to_id.keys()))
     print(color_code)
     with open("color_code.json", "w") as outfile:
       json.dump(color_code, outfile)
+  else:
+    with open("color_code.json", 'r') as infile:
+      color_code = json.load(infile)
 
   # create dataframe per image
   dfs = dict()

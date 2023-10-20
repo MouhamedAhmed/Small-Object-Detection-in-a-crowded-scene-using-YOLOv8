@@ -259,23 +259,17 @@ def main():
     argparser.add_argument('-annotations_path', '--annotations_path', type=str, help='path of annotations file', default = 'dataset/whitefly.json')
     argparser.add_argument('-model_path', '--model_path', type=str, help='path of model to be tested', default = 'runs/detect/yolov8n2/weights/best.pt')
     argparser.add_argument('-model_type', '--model_type', type=str, help='type of the model to be tested (pytorch, keras, tflite)', default = 'pytorch')
+    argparser.add_argument('-color_code', '--color_code', type=str, help='path of color code json file', default = 'color_code.json')
+
     args = argparser.parse_args()
 
     # read configs
     with open(args.config_path, "r") as stream:
         configs = yaml.safe_load(stream)
 
-    # generate color_code for visualization if not exists, otherwise load it.
-    if not os.path.exists("color_code.json"):
-        print('Create New Color Code for Labels')
-        color_code = getDistinctColors(list(cat_to_id.keys()))
-        print(color_code)
-        with open("color_code.json", "w") as outfile:
-            json.dump(color_code, outfile)
-    else:
-        with open("color_code.json", 'r') as infile:
-            color_code = json.load(infile)
-    
+    # read color_code for visualization.
+    with open(args.color_code, 'r') as infile:
+        color_code = json.load(infile)
 
     label_map = {v:k for k,v in configs['labelmap'].items()}
 
