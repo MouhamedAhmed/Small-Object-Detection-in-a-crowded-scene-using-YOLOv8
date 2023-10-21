@@ -218,7 +218,7 @@ class Predictor:
                     start_coords[i][0]
                      ]
             results[i]['boxes'] = np.array([
-                        ((box*self.cell_dim)+start)/np.array([w,h,w,h])
+                        ((box*self.cell_dim)+start)/np.array([h,w,h,w])
                         for box in results[i]['boxes']
                     ])
             
@@ -278,7 +278,7 @@ class Predictor:
         label_names = [self.label_map[i] for i in results['classes']]
         if len(results['boxes']):
             results = pd.DataFrame(list(zip(results['classes'], label_names, results['scores'],  results['boxes'][:,0], results['boxes'][:,1], results['boxes'][:,2], results['boxes'][:,3])),
-                    columns =['label', 'label_name', 'score', 'x1', 'y1', 'x2', 'y2'])
+                    columns =['label', 'label_name', 'score', 'y1', 'x1', 'y2', 'x2'])
         else:
             results = pd.DataFrame(columns=['label', 'label_name', 'score', 'x1', 'y1', 'x2', 'y2'])
 
